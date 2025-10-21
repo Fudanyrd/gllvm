@@ -38,6 +38,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+    "regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -289,6 +290,33 @@ func buildObjectFile(compilerExecName string, pr ParserResult, srcFile string, o
 	return
 }
 
+func buildBitcodeFileRetry(compilerExecName string, pr ParserResult, srcFile string, bcFile string) (success bool) {
+	args := pr.CompileArgs[:]
+	args = append(args, LLVMbcGen...)
+	args = append(args, "-emit-llvm", "-c", srcFile)
+	LogWarning("cannot specify output file when compiling cuda c++ source to bitcode, retrying without -o %s", bcFile)
+	success, err := execCmd(compilerExecName, args, "")
+
+	if !success {
+		LogError("Failed to build bitcode file for %s because: %v\n", srcFile, err)
+		return
+	}
+
+	// replace the suffix of srcFile, .cu -> .bc
+	oFile := strings.TrimSuffix(srcFile, path.Ext(srcFile)) + ".bc"
+	// move the generated bitcode file to the expected location
+	err = os.Rename(oFile, bcFile)
+
+	if err != nil {
+		LogError("Failed to move bitcode file from %s to %s because: %v\n", oFile, bcFile, err)
+		success = false
+		return
+	}
+
+	success = true
+	return
+}
+
 // Tries to build the specified source file to bitcode
 func buildBitcodeFile(compilerExecName string, pr ParserResult, srcFile string, bcFile string) (success bool) {
 	args := pr.CompileArgs[:]
@@ -297,6 +325,11 @@ func buildBitcodeFile(compilerExecName string, pr ParserResult, srcFile string, 
 	args = append(args, "-emit-llvm", "-c", srcFile, "-o", bcFile)
 	success, err := execCmd(compilerExecName, args, "")
 	if !success {
+		var regExp = regexp.MustCompile(`\.(cu)$`)
+		if regExp.MatchString(srcFile) {
+			return buildBitcodeFileRetry(compilerExecName, pr, srcFile, bcFile)
+		}
+
 		LogError("Failed to build bitcode file for %s because: %v\n", srcFile, err)
 		return
 	}

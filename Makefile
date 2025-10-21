@@ -34,4 +34,4 @@ vet:
 	go vet ./...
 
 clean:
-	rm -f data/*hello data/*.bc [td]*/.*.c.o [td]*/*.o [td]*/.*.c.o.bc data/*.notanextensionthatwerecognize
+	-rm -f data/*hello data/*.bc [td]*/.*.c.o [td]*/*.o [td]*/.*.c.o.bc data/*.notanextensionthatwerecognize data/.*.bc

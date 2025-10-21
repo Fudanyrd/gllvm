@@ -394,7 +394,7 @@ func Parse(argList []string) ParserResult {
 		{`^-mindirect-branch=.+$`, flagInfo{0, pr.compileUnaryCallback}},          //iam: linux kernel stuff
 		{`^--param=.+$`, flagInfo{0, pr.compileUnaryCallback}},                    //iam: linux kernel stuff
 		//the above come first because they are anchored at the start, and some can contain filenames.
-		{`^.+\.(c|cc|cpp|C|cxx|i|s|S|bc)$`, flagInfo{0, pr.inputFileCallback}},
+		{`^.+\.(c|cc|cu|cpp|C|cxx|i|s|S|bc)$`, flagInfo{0, pr.inputFileCallback}},
 		{`^.+\.([fF](|[0-9][0-9]|or|OR|pp|PP))$`, flagInfo{0, pr.inputFileCallback}},
 		//iam: it's a bit fragile as to what we recognize as an object file.
 		// this also shows up in the compile function attachBitcodePathToObject, so additions
